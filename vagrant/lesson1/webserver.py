@@ -1,6 +1,15 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
+## import CRUD  Operations from Lesson 1
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database_setup import Base, Restaurant, MenuItem
 
+#Create session and connect to DB
+engine = create_engine('sqlite:///restaurantmenu.db')
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
 
 class webServerHandler(BaseHTTPRequestHandler):
 
@@ -32,6 +41,39 @@ class webServerHandler(BaseHTTPRequestHandler):
                 print (output)
                 return
 
+            #
+            if self.path.endswith("/restaurants"):
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                output = ""
+                output += "<html><body>"
+                output += "<h2>Restaurant Lists</h2>"
+
+
+                '''
+                myFirstRestaurant = Restaurant(name = "Pizza Palace")
+                session.add(myFirstRestaurant)
+                cheesepizza = MenuItem(name = "Cheese Pizza", description = "Made with all natural ingredients and fresh mozzarella", course = "Entree", price = "$8.99", restaurant = myFirstRestaurant)
+                session.add(cheesepizza)
+                session.commit()
+                '''
+                restaurants = session.query(Restaurant).all()
+
+                for restaurant in restaurants:
+                    output += restaurant.name + "<br />"
+                    output += "<a href = '#' >Edit</a> <br>"
+                    output += "<a href = '#' >Delete</a> <br>"
+                    output += "<br>"
+
+                output += "</body></html>"
+                self.wfile.write(output)
+                print(output)
+                return
+
+
+
+            #
         except IOError:
             self.send_error(404, 'File Not Found: %s' % self.path)
 
